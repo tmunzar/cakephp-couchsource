@@ -2,7 +2,7 @@ CouchSource
 ===========
 
 CouchSource is a [CakePHP datasource](http://book.cakephp.org/view/1075/DataSources) allowing to build Models from a [CouchDB](http://couchdb.apache.org/) database.  
-This is the one in use on the [PathMotion](http://www.pathmotion.com) website.
+This is an update/fix for the https://github.com/PathMotion/cakephp-couchsource to work on CakePHP 2.1+
 
 Install
 -------
@@ -35,26 +35,60 @@ After having [set the couchdb](http://wiki.apache.org/couchdb/Installation) engi
 			public $useDbConfig = 'couch';
 			public $useTable = 'couchdb_database_name';
 			public $primaryKey = 'id';
-
-			// since CouchDB is shema-less, the fields here are only required 
-			// for CakePHP to validate and save them into the database
-			public $_schema = array(
-				'id' => array(
-					'type' => 'string',
-					'key' => 'primary',
-					'length' => 32
-				),
-				'anyfield' => array(
-					'type' => 'json',
-					'null' => true
-				),
-				'anotherfield' => array(
-					'type' => 'json',
-					'null' => true
-				)
-			);
 		
 		}
+		
+** IMPORTANT **
+Also add the following functions to your Model for the schema to be generated so that create and update functions work.
+(These are borrowed from https://github.com/maxwellium/cakephp-couchdb)
+
+My recommendation is to make a Model class and ad these to them and have all your CouchDB based classes extend from it.
+
+	public function schema($field = false) {
+		$this->_schema = array_flip(array_keys($this->validate));
+
+		if (isset($this->data[$this->alias]) && is_array($this->data[$this->alias])) {
+			$this->_schema = array_merge(
+				$this->_schema,
+				array_flip(array_keys($this->data[$this->alias])));
+		}
+
+		if (is_string($field)) {
+			if (isset($this->_schema[$field])) {
+				return $this->_schema[$field];
+			}
+			return null;
+    	}
+
+		return $this->_schema;
+	}
+
+	public function hasField($name, $checkVirtual = false) {
+		if (is_array($name)) {
+			foreach ($name as $n) {
+				if ($this->hasField($n, $checkVirtual)) {
+					return $n;
+				}
+			}
+			return false;
+		}
+
+		if ($checkVirtual && !empty($this->virtualFields)) {
+			if ($this->isVirtualField($name)) {
+				return true;
+			}
+		}
+
+		// this is the change: rebuilding schema from data everytime so all fields are submitted
+		$this->schema();
+
+		if ($this->_schema != null) {
+			return isset($this->_schema[$name]);
+		}
+
+		return false;
+	}
+
 
 Use Cases
 ---------

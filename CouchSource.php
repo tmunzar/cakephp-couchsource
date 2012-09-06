@@ -1,8 +1,7 @@
 <?php
-App::import('Core', 'HttpSocket');
+App::uses('HttpSocket', 'Network/Http');
 
 class CouchSource extends DataSource {
-
 	public $config = array();
 	public $connected = false;
 
@@ -89,7 +88,7 @@ class CouchSource extends DataSource {
 		
 	}
 	
-	public function read(&$model, $queryData = array()) {
+	public function read(&$model, $queryData = array(),$recursive = null) {
 
 		if(isset($queryData['view'])) {
 			// request a view
@@ -128,7 +127,7 @@ class CouchSource extends DataSource {
 			if($queryData['fields'] == 'count') {
 				// documents count is requested
 				$result[] = array( $model->alias => array(
-					'count' => count($raw_result->rows)
+					'count' => count($raw_result['rows'])
 				));
 			} else {
 				// a collection of documents is requested
@@ -144,9 +143,8 @@ class CouchSource extends DataSource {
 		
 	}
 	
-	public function create(&$model, $fields = null, $values = null) {
-		
-		// rebuild the data array
+	public function create(Model $model, $fields = array(), $values = array()) {
+        // rebuild the data array
 		if ($fields !== null && $values !== null) {
 			$data = array_combine($fields, $values);
 		}
@@ -170,7 +168,7 @@ class CouchSource extends DataSource {
 	}
 	
 	public function update(&$model, $fields = null, $values = null) {
-		
+        
 		// not all the fields can be passed there, so merge with the existing document
 		if ($fields !== null && $values !== null) {
 			$data = array_combine($fields, $values);
@@ -201,7 +199,7 @@ class CouchSource extends DataSource {
 	}
 	
 	public function query($method, $params, &$model) {
-
+        
 		if (strpos(strtolower($method), 'findby') === 0 || strpos(strtolower($method), 'findallby') === 0) {
 
 			if (strpos(strtolower($method), 'findby') === 0) {
