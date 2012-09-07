@@ -17,11 +17,12 @@ After having [set the couchdb](http://wiki.apache.org/couchdb/Installation) engi
 			// [...]
 		
 			var $couch = array(
-				'datasource' => 'couch',
+				'datasource' => 'CouchSource',
 				'host' => '127.0.0.1',
 				'port' => 5984,
 				'user' => 'my_couchdb_user',
 				'password' => 'my_couchdb_password',
+				'database' => '', // To avoid "empty $database in DataSource.php" notification.
 				'auth_method' => 'cookie' // (or 'basic')
 			);
 	
